@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FireLoadView">
+        <attr name="wood_color" format="color" />
+        <attr name="fire_color" format="color" />
+    </declare-styleable>
+</resources>
