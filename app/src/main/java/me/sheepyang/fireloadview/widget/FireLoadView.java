@@ -35,6 +35,10 @@ public class FireLoadView extends View {
     private RectF mFireRectf;
     private float mFireX;
     private float mFireY;
+    private float mFireWidth;
+    private boolean mFireMoveRight;
+    private Paint mErasePaint;
+    private boolean mFireMoveUp = true;
 
     public FireLoadView(Context context) {
         this(context, null);
@@ -64,6 +68,11 @@ public class FireLoadView extends View {
         mFirePaint.setAntiAlias(true);
         mFirePaint.setStrokeWidth(15);
         mFirePaint.setColor(mFire1Color);
+
+        mErasePaint = new Paint();
+        mErasePaint.setAntiAlias(true);
+        mErasePaint.setStrokeWidth(15);
+        mErasePaint.setColor(Color.parseColor("#ffffffff"));
 
         mWoodRectf = new RectF();
         mFireRectf = new RectF();
@@ -100,13 +109,14 @@ public class FireLoadView extends View {
         mWoodRectf.right = woodWidthStop;
         mWoodRectf.bottom = woodHeightStop;
 
-        float fireWidth = mWidth * 0.3f;
+        // 确定最底层火苗大小，中心点位置
+        mFireWidth = mWidth * 0.15f;
         mFireX = mWidth / 2;
-        mFireY = mWoodRectf.top - fireWidth / 2;
-        mFireRectf.left = mFireX - fireWidth / 2;
-        mFireRectf.right = mFireX + fireWidth / 2;
-        mFireRectf.bottom = mFireY + fireWidth / 2;
-        mFireRectf.top = mFireY - fireWidth / 2;
+        mFireY = mWoodRectf.bottom - 2 * mFireWidth / 3;
+        mFireRectf.left = mFireX - mFireWidth / 2;
+        mFireRectf.right = mFireX + mFireWidth / 2;
+        mFireRectf.bottom = mFireY + mFireWidth / 2;
+        mFireRectf.top = mFireY - mFireWidth / 2;
         setMeasuredDimension(mWidth, mHeight);
     }
 
@@ -115,20 +125,65 @@ public class FireLoadView extends View {
         mBitmap.eraseColor(Color.parseColor("#00000000"));
 
         //绘制火苗
-        mCanvas.rotate(45, mFireX, mFireY);
-        mCanvas.drawRoundRect(mFireRectf, 20, 20, mFirePaint);
-        mCanvas.rotate(-45, mFireX, mFireY);
+        drawFire(mFireRectf);
 
-        mCanvas.drawPoint(mFireX, mFireY, mWoodPaint);
-
+        mCanvas.drawRect(0, mWoodRectf.top + mWoodRectf.height(), mWidth, mHeight, mErasePaint);// 将木头下半部分的火苗擦除掉
         // 绘制木头
         mCanvas.rotate(15, mWidth / 2, mWoodRectf.top + mWoodRectf.height() / 2);
         mCanvas.drawRoundRect(mWoodRectf, 10, 10, mWoodPaint);
         mCanvas.rotate(-30, mWidth / 2, mWoodRectf.top + mWoodRectf.height() / 2);
         mCanvas.drawRoundRect(mWoodRectf, 10, 10, mWoodPaint);
         mCanvas.rotate(15, mWidth / 2, mWoodRectf.top + mWoodRectf.height() / 2);
-
         canvas.drawBitmap(mBitmap, 0, 0, null);
         invalidate();
+    }
+
+    private void drawFire(RectF fireRectf) {
+        mCanvas.rotate(45, mFireX, mFireY);
+        mCanvas.drawRoundRect(fireRectf, 20, 20, mFirePaint);
+        mCanvas.rotate(-45, mFireX, mFireY);
+
+//        if (mFireWidth < mWidth * 0.4f) {
+//            mFireWidth = mFireWidth++;
+//        }
+
+        // 改变火苗的横坐标，左右来回晃动
+        if (mFireMoveRight) {// 向右晃动
+            mFireX++;
+            if (mFireX > mWidth * 0.55f) {
+                mFireMoveRight = false;
+            }
+        } else {// 向左晃动
+            mFireX--;
+            if (mFireX < mWidth * 0.45f) {
+                mFireMoveRight = true;
+            }
+        }
+
+        if (mFireMoveUp) {// 向上移动
+            mFireY++;
+            if (mFireY > mWoodRectf.bottom - mFireWidth) {
+                mFireMoveUp = false;
+            }
+        } else {// 向下移动
+            mFireY--;
+            if (mFireY < mWoodRectf.bottom - mFireWidth * 0.5f) {
+                mFireMoveUp = true;
+            }
+        }
+
+        // 改变火苗大小
+        if (mFireWidth < mWidth * 0.3f) {
+            mFireWidth++;
+        } else {
+            mFireWidth = mWidth * 0.15f;
+        }
+
+        mFireRectf.left = mFireX - mFireWidth / 2;
+        mFireRectf.right = mFireX + mFireWidth / 2;
+        mFireRectf.bottom = mFireY + mFireWidth / 2;
+        mFireRectf.top = mFireY - mFireWidth / 2;
+
+        mCanvas.drawPoint(mFireX, mFireY, mWoodPaint);
     }
 }
